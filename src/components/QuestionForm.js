@@ -1,13 +1,14 @@
 import React, { useState } from "react";
 
-function QuestionForm(props) {
-  const [formData, setFormData] = useState({
+function QuestionForm( { url, addQuestion }) {
+  
+  let [formData, setFormData] = useState({
     prompt: "",
     answer1: "",
     answer2: "",
     answer3: "",
     answer4: "",
-    correctIndex: 0,
+    correctIndex: 0
   });
 
   function handleChange(event) {
@@ -17,9 +18,45 @@ function QuestionForm(props) {
     });
   }
 
-  function handleSubmit(event) {
+  const handleSubmit = (event) => {
     event.preventDefault();
-    console.log(formData);
+
+    let { prompt, answer1, answer2, answer3, answer4, correctIndex } = formData;
+
+    let updatedFormData = {
+      prompt: prompt,
+      answers: [answer1, answer2, answer3, answer4],
+      correctIndex: parseInt(correctIndex, 10)
+    }
+
+    fetch(url, {
+      method: "POST",
+      headers: {"Content-Type": "application/json"},
+      body: JSON.stringify(updatedFormData),
+    })
+    .then(res => {
+      if (res.ok) {
+        return res.json();
+      } else {
+        throw Error("failed to submit")
+      }
+    })
+    .then(data => {
+      // console.log("Question added:", data);
+      addQuestion({
+        id: data.id,
+        ...updatedFormData,
+      });
+      setFormData({
+        prompt: "",
+        answer1: "",
+        answer2: "",
+        answer3: "",
+        answer4: "",
+        correctIndex: 0
+      })
+    })
+    .catch(err => console.error("couldn't reach server"))
   }
 
   return (
